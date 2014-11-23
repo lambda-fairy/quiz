@@ -26,6 +26,21 @@ class PDA:
     def __repr__(self):
         return '<PDA {}>'.format(set(map(tuple, self.data)))
 
+    def is_deterministic(self):
+        """Return True iff the PDA is deterministic."""
+        for table in self.states:
+            for (input_symbol, stack_symbol), entries in table.items():
+                if len(entries) > 1:
+                    # If there is more than one possible transition,
+                    # then it must be nondeterministic
+                    return False
+                if (input_symbol is not None and entries and
+                        table.get((None, stack_symbol))):
+                    # If there are transitions for both empty input AND
+                    # non-empty input, then it is nondeterministic
+                    return False
+        return True
+
     def is_final_state(self):
         """Return True iff the PDA is in a final state."""
         return any(state in self.final_states for state, _ in self.data)
@@ -116,6 +131,7 @@ test_func = lambda s: s.count('0') == s.count('1') and '10' not in s
 if __name__ == '__main__':
     # Testing procedure yay
     from copy import copy
+    assert not test_pda.is_deterministic(), 'test PDA is nondeterministic'
     for size in range(10):
         for i in range(1 << size):
             s = '{:b}'.format(i).rjust(size, '0')
