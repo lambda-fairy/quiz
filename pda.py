@@ -40,15 +40,11 @@ class PDA:
             self.step(input_symbol)
 
     def step(self, input_symbol):
-        """
-        Step the automaton with the specified input symbol.
-
-        The input may be None; in that case TODO
-
-        """
+        """Step the automaton with the specified input symbol."""
+        if input_symbol is None:
+            raise ValueError('input symbol cannot be None')
         data = self.data
-        if input_symbol is not None:
-            data = self._single_step(data, input_symbol)
+        data = self._single_step(data, input_symbol)
         data = self._epsilon_closure(data)
         self.data = data
 
