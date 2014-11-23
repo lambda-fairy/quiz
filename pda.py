@@ -82,11 +82,12 @@ class PDA:
 
             table = self.states[state]
             try:
-                next_state, next_stack = table[(input_symbol, stack_symbol)]
+                entries = table[(input_symbol, stack_symbol)]
             except KeyError:
                 continue
 
-            yield Datum(next_state, next_stack+stack[1:])
+            for next_state, next_stack in entries:
+                yield Datum(next_state, next_stack+stack[1:])
 
 
 # This PDA matches the language { 0^n 1^n | n : N }
@@ -95,14 +96,14 @@ test_pda = PDA(
         list('AZ'),
         [
             {
-                ('0', 'Z'): (0, 'AZ'),
-                ('0', 'A'): (0, 'AA'),
-                (None, 'Z'): (1, 'Z'),
-                (None, 'A'): (1, 'A'),
+                ('0', 'Z'): {(0, 'AZ')},
+                ('0', 'A'): {(0, 'AA')},
+                (None, 'Z'): {(1, 'Z')},
+                (None, 'A'): {(1, 'A')},
                 },
             {
-                ('1', 'A'): (1, ''),
-                (None, 'Z'): (2, 'Z'),
+                ('1', 'A'): {(1, '')},
+                (None, 'Z'): {(2, 'Z')},
                 },
             {},
             ],
