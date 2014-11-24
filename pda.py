@@ -103,39 +103,3 @@ class PDA:
 
             for next_state, next_stack in entries:
                 yield Datum(next_state, next_stack+stack[1:])
-
-
-# This PDA matches the language { 0^n 1^n | n : N }
-test_pda = PDA(
-        list('01'),
-        list('AZ'),
-        [
-            {
-                ('0', 'Z'): {(0, 'AZ')},
-                ('0', 'A'): {(0, 'AA')},
-                (None, 'Z'): {(1, 'Z')},
-                (None, 'A'): {(1, 'A')},
-                },
-            {
-                ('1', 'A'): {(1, '')},
-                (None, 'Z'): {(2, 'Z')},
-                },
-            {},
-            ],
-        'Z',
-        {2})
-
-test_func = lambda s: s.count('0') == s.count('1') and '10' not in s
-
-
-if __name__ == '__main__':
-    # Testing procedure yay
-    from copy import copy
-    assert not test_pda.is_deterministic(), 'test PDA is nondeterministic'
-    for size in range(10):
-        for i in range(1 << size):
-            s = '{:b}'.format(i).rjust(size, '0')
-            pda = copy(test_pda)
-            pda.feed(s)
-            assert test_func(s) == pda.is_final_state(), s
-    print('It works!')
