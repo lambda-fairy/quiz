@@ -14,6 +14,25 @@ class PDA:
         if not states:
             raise ValueError('transition table must declare at least one state')
 
+        # Check transition table
+        for table in states:
+            for (input_symbol, stack_symbol), entries in table.items():
+                if not (input_symbol is None or input_symbol in input_alpha):
+                    raise ValueError('{!r} is not in the input alphabet'.format(input_symbol))
+                if not (stack_symbol in stack_alpha):
+                    raise ValueError('{!r} is not in the stack alphabet'.format(stack_symbol))
+                for state, stack in entries:
+                    if not (0 <= state < len(states)):
+                        raise ValueError('invalid state number: {!r}'.format(state))
+                    if not all(symbol in stack_alpha for symbol in stack):
+                        raise ValueError('invalid stack symbols: {!r}'.format(stack))
+
+        # Check final states
+        for state in final_states:
+            if not (0 <= state < len(states)):
+                raise ValueError('invalid final state: {!r}'.format(state))
+
+        # If everything's okay, construct the object
         self.input_alpha = input_alpha
         self.stack_alpha = stack_alpha
         self.states = states
