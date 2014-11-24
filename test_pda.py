@@ -48,4 +48,7 @@ def test_matching():
     for s in binary_strings():
         pda = copy(pda_0n_1n)
         pda.feed(s)
-        assert is_0n_1n(s) == pda.is_final_state()
+        if is_0n_1n(s):
+            assert pda.is_final_state(), '{!r} does not match when it should'.format(s)
+        else:
+            assert not pda.is_final_state(), '{!r} matches when it should not'.format(s)
