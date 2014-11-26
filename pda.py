@@ -8,34 +8,34 @@ Datum = namedtuple('Datum', ['state', 'stack'])
 
 
 class PDA:
-    def __init__(self, input_alpha, stack_alpha, states, initial_stack,
+    def __init__(self, input_alpha, stack_alpha, table, initial_stack,
             final_states, recursion_limit=100):
 
-        if not states:
+        if not table:
             raise ValueError('transition table must declare at least one state')
 
         # Check transition table
-        for table in states:
-            for (input_symbol, stack_symbol), entries in table.items():
+        for subtable in table:
+            for (input_symbol, stack_symbol), entries in subtable.items():
                 if not (input_symbol is None or input_symbol in input_alpha):
                     raise ValueError('{!r} is not in the input alphabet'.format(input_symbol))
                 if not (stack_symbol in stack_alpha):
                     raise ValueError('{!r} is not in the stack alphabet'.format(stack_symbol))
                 for state, stack in entries:
-                    if not (0 <= state < len(states)):
+                    if not (0 <= state < len(table)):
                         raise ValueError('invalid state number: {!r}'.format(state))
                     if not all(symbol in stack_alpha for symbol in stack):
                         raise ValueError('invalid stack symbols: {!r}'.format(stack))
 
         # Check final states
         for state in final_states:
-            if not (0 <= state < len(states)):
+            if not (0 <= state < len(table)):
                 raise ValueError('invalid final state: {!r}'.format(state))
 
         # If everything's okay, construct the object
         self.input_alpha = input_alpha
         self.stack_alpha = stack_alpha
-        self.states = states
+        self.table = table
         self.final_states = final_states
         self.recursion_limit = recursion_limit
 
@@ -47,14 +47,14 @@ class PDA:
 
     def is_deterministic(self):
         """Return True iff the PDA is deterministic."""
-        for table in self.states:
-            for (input_symbol, stack_symbol), entries in table.items():
+        for subtable in self.table:
+            for (input_symbol, stack_symbol), entries in subtable.items():
                 if len(entries) > 1:
                     # If there is more than one possible transition,
                     # then it must be nondeterministic
                     return False
                 if (input_symbol is not None and entries and
-                        table.get((None, stack_symbol))):
+                        subtable.get((None, stack_symbol))):
                     # If there are transitions for both empty input AND
                     # non-empty input, then it is nondeterministic
                     return False
@@ -114,9 +114,9 @@ class PDA:
                 # Our model doesn't handle empty stacks
                 continue
 
-            table = self.states[state]
+            subtable = self.table[state]
             try:
-                entries = table[(input_symbol, stack_symbol)]
+                entries = subtable[(input_symbol, stack_symbol)]
             except KeyError:
                 continue
 
