@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
 
 from collections import namedtuple
+from itertools import permutations
 
 
-# The instantaneous description: a triple containing the state, any
-# remaining input, and the stack (top element first)
-Datum = namedtuple('Datum', ['state', 'input', 'stack'])
+# Acceptance modes
+FINAL_STATE = 1
+EMPTY_STACK = 2
+FINAL_STATE_AND_EMPTY_STACK = FINAL_STATE | EMPTY_STACK
 
 
-class PDA:
-    def __init__(self, input_alpha, stack_alpha, table, input, stack, final_states):
+# A PDA configuration: a triple containing the state, remaining input,
+# and stack (top element first)
+Datum = namedtuple('Datum', 'state input stack')
 
-        if not all(symbol in input_alpha for symbol in input):
-            raise ValueError('invalid input')
-        if not all(symbol in stack_alpha for symbol in stack):
-            raise ValueError('invalid initial stack')
+
+class Template:
+    def __init__(self, input_alpha, stack_alpha, table, initial_stack,
+            final_states, accept_condition):
 
         if not table:
             raise ValueError('transition table must declare at least one state')
+
+        # Check stack contains only valid symbols
+        if not all(symbol in stack_alpha for symbol in initial_stack):
+            raise ValueError('invalid initial stack')
 
         # Check final states
         for state in final_states:
@@ -26,10 +33,10 @@ class PDA:
 
         # Check transition table
         for subtable in table:
-            for (input_symbol, stack_symbol), entries in subtable.items():
-                if not (input_symbol is None or input_symbol in input_alpha):
+            for (input_prefix, stack_prefix), entries in subtable.items():
+                if not all(symbol in input_alpha for symbol in input_prefix):
                     raise ValueError('{!r} is not in the input alphabet'.format(input_symbol))
-                if not (stack_symbol in stack_alpha):
+                if not all(symbol in stack_alpha for symbol in stack_prefix):
                     raise ValueError('{!r} is not in the stack alphabet'.format(stack_symbol))
                 for state, stack in entries:
                     if not (0 <= state < len(table)):
@@ -41,89 +48,87 @@ class PDA:
         self.input_alpha = input_alpha
         self.stack_alpha = stack_alpha
         self.table = table
+        self.initial_stack = initial_stack
         self.final_states = final_states
-        self.recursion_limit = recursion_limit
-
-        # Initial state is assumed to be q0
-        self.data = self._epsilon_closure({Datum(0, initial_stack)})
-
-    def __repr__(self):
-        return '<PDA {}>'.format(set(map(tuple, self.data)))
+        self.accept_condition = accept_condition
 
     def is_deterministic(self):
         """Return True iff the PDA is deterministic."""
         for subtable in self.table:
-            for (input_symbol, stack_symbol), entries in subtable.items():
-                if len(entries) > 1:
-                    # If there is more than one possible transition,
-                    # then it must be nondeterministic
-                    return False
-                if (input_symbol is not None and entries and
-                        subtable.get((None, stack_symbol))):
-                    # If there are transitions for both empty input AND
-                    # non-empty input, then it is nondeterministic
+            for items_i, items_j in permutations(subtable.items(), 2):
+                (input_i, stack_i), entries_i = items_i
+                (input_j, stack_j), entries_j = items_j
+                if (overlap(input_i, input_j) and overlap(stack_i, stack_j) and
+                        len(entries_i) + len(entries_j) > 1):
                     return False
         return True
 
+
+class PDA:
+    def __init__(self, template, input):
+        # Check input contains only valid symbols
+        if not all(symbol in template.input_alpha for symbol in input):
+            raise ValueError('invalid input')
+
+        self.table = template.table
+        self.final_states = template.final_states
+        self.accept_condition = template.accept_condition
+
+        # Initial state is assumed to be q0
+        self.data = frozenset({Datum(0, input, template.initial_stack)})
+
+    def __repr__(self):
+        return '<PDA {}>'.format(set(map(tuple, self.data)))
+
+    def run(self, max_iterations=100):
+        for iteration in range(max_iterations):
+            if self.accepts():
+                return True
+            if self.rejects():
+                return False
+            self.step()
+        else:
+            raise RuntimeError('iteration limit reached (is there an infinite loop?)')
+
+    def accepts(self):
+        """Return True iff the PDA is in an accepting state."""
+        if self.accept_condition & FINAL_STATE and not self.is_final_state():
+            return False
+        if self.accept_condition & EMPTY_STACK and not self.is_empty_stack():
+            return False
+        return True
+
+    def rejects(self):
+        """Return True if we can guarantee the PDA will never reach an
+        accepting state."""
+        return not self.data
+
     def is_final_state(self):
         """Return True iff the PDA is in a final state."""
-        return any(state in self.final_states for state, _ in self.data)
+        return any(not input and state in self.final_states for state, input, _ in self.data)
 
     def is_empty_stack(self):
         """Return True iff the PDA has an empty stack."""
-        return any(len(stack) == 0 for _, stack in self.data)
+        return any(not input and len(stack) == 0 for _, input, stack in self.data)
 
-    def feed(self, input_string):
-        """Feed the given string into the automaton."""
-        for input_symbol in input_string:
-            self.step(input_symbol)
+    def step(self):
+        """Advance the automaton by a single transition."""
+        self.data = frozenset(self._step_generator(self.table, self.data))
 
-    def step(self, input_symbol):
-        """Step the automaton with the specified input symbol."""
-        if input_symbol is None:
-            raise ValueError('input symbol cannot be None')
-        data = self.data
-        data = self._single_step(data, input_symbol)
-        data = self._epsilon_closure(data)
-        self.data = data
+    @staticmethod
+    def _step_generator(table, data):
+        for state, input, stack in data:
+            subtable = table[state]
+            for (input_prefix, stack_prefix), entries in subtable.items():
+                if (input.startswith(input_prefix) and
+                        stack.startswith(stack_prefix)):
+                    for next_state, next_stack in entries:
+                        yield Datum(
+                                next_state,
+                                input[len(input_prefix):],
+                                next_stack+stack[len(stack_prefix):])
 
-    def _epsilon_closure(self, data):
-        """
-        Compute the epsilon closure, that is, the set of all states that
-        can be reached without consuming input.
-        """
-        # Do a breadth-first traversal of the state graph
-        frontier = data
-        visited = set(frontier)
-        for iteration in range(self.recursion_limit):
-            # Find all the states we can reach by a single transition
-            frontier = self._single_step(frontier, None)
-            # Remove any states we've already visited
-            frontier.difference_update(visited)
-            if not frontier:
-                return visited
-            else:
-                visited.update(frontier)
-        else:
-            raise ValueError(
-                    'recursion limit reached (is there an infinite loop?)')
 
-    def _single_step(self, data, input_symbol):
-        return set(self._single_step_generator(data, input_symbol))
-
-    def _single_step_generator(self, data, input_symbol):
-        for state, stack in data:
-            try:
-                stack_symbol = stack[0]
-            except IndexError:
-                # Our model doesn't handle empty stacks
-                continue
-
-            subtable = self.table[state]
-            try:
-                entries = subtable[(input_symbol, stack_symbol)]
-            except KeyError:
-                continue
-
-            for next_state, next_stack in entries:
-                yield Datum(next_state, next_stack+stack[1:])
+def overlap(a, b):
+    """Determine if one string is a prefix of the other."""
+    return a.startswith(b) or b.startswith(a)

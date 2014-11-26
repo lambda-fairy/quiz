@@ -1,27 +1,26 @@
-from copy import copy
-
-from pda import PDA
+import pda
 
 
 # This PDA matches the language { 0^n 1^n | n : N }
-pda_0n_1n = PDA(
+pda_0n_1n = pda.Template(
         list('01'),
         list('AZ'),
         [
             {
                 ('0', 'Z'): {(0, 'AZ')},
                 ('0', 'A'): {(0, 'AA')},
-                (None, 'Z'): {(1, 'Z')},
-                (None, 'A'): {(1, 'A')},
+                ('', 'Z'): {(1, 'Z')},
+                ('', 'A'): {(1, 'A')},
                 },
             {
                 ('1', 'A'): {(1, '')},
-                (None, 'Z'): {(2, 'Z')},
+                ('', 'Z'): {(2, 'Z')},
                 },
             {},
             ],
         'Z',
-        {2})
+        {2},
+        pda.FINAL_STATE)
 
 
 def is_0n_1n(s):
@@ -46,9 +45,8 @@ def test_deterministic():
 
 def test_matching():
     for s in binary_strings():
-        pda = copy(pda_0n_1n)
-        pda.feed(s)
+        matches = pda.PDA(pda_0n_1n, s).run()
         if is_0n_1n(s):
-            assert pda.is_final_state(), '{!r} does not match when it should'.format(s)
+            assert matches, '{!r} does not match when it should'.format(s)
         else:
-            assert not pda.is_final_state(), '{!r} matches when it should not'.format(s)
+            assert not matches, '{!r} matches when it should not'.format(s)
