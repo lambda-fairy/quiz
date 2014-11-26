@@ -3,16 +3,26 @@
 from collections import namedtuple
 
 
-# A pair containing a state label and a stack (top element first)
-Datum = namedtuple('Datum', ['state', 'stack'])
+# The instantaneous description: a triple containing the state, any
+# remaining input, and the stack (top element first)
+Datum = namedtuple('Datum', ['state', 'input', 'stack'])
 
 
 class PDA:
-    def __init__(self, input_alpha, stack_alpha, table, initial_stack,
-            final_states, recursion_limit=100):
+    def __init__(self, input_alpha, stack_alpha, table, input, stack, final_states):
+
+        if not all(symbol in input_alpha for symbol in input):
+            raise ValueError('invalid input')
+        if not all(symbol in stack_alpha for symbol in stack):
+            raise ValueError('invalid initial stack')
 
         if not table:
             raise ValueError('transition table must declare at least one state')
+
+        # Check final states
+        for state in final_states:
+            if not (0 <= state < len(table)):
+                raise ValueError('invalid final state: {!r}'.format(state))
 
         # Check transition table
         for subtable in table:
@@ -26,11 +36,6 @@ class PDA:
                         raise ValueError('invalid state number: {!r}'.format(state))
                     if not all(symbol in stack_alpha for symbol in stack):
                         raise ValueError('invalid stack symbols: {!r}'.format(stack))
-
-        # Check final states
-        for state in final_states:
-            if not (0 <= state < len(table)):
-                raise ValueError('invalid final state: {!r}'.format(state))
 
         # If everything's okay, construct the object
         self.input_alpha = input_alpha
