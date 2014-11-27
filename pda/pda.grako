@@ -1,0 +1,16 @@
+clause = pattern:pattern '->' outputs:outputs $ ;
+
+pattern = '(' state:state ',' input:input ',' stack:stack ')' ;
+
+outputs
+    = '{' [ @+:output { ',' @+:output }* ] '}'
+    | @+:output
+    ;
+
+output = '(' state:state ',' stack:stack ')';
+
+state = /[0-9]+/ ;
+
+input = /[0-9A-Za-z]+/ ;
+
+stack = /[0-9A-Za-z]+/ ;

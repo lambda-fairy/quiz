@@ -1,3 +1,4 @@
 *.py[cdo]
 __pycache__/
 env/
+autogen.py
