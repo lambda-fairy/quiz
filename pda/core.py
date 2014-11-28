@@ -12,7 +12,7 @@ FINAL_STATE_AND_EMPTY_STACK = FINAL_STATE | EMPTY_STACK
 
 # A PDA configuration: a triple containing the state, remaining input,
 # and stack (top element first)
-Datum = namedtuple('Datum', 'state input stack')
+Config = namedtuple('Config', 'state input stack')
 
 
 class Template:
@@ -75,7 +75,7 @@ class PDA:
         self.accept_condition = template.accept_condition
 
         # Initial state is assumed to be q0
-        self.data = frozenset({Datum(0, input, template.initial_stack)})
+        self.data = frozenset({Config(0, input, template.initial_stack)})
 
     def __repr__(self):
         return '<PDA {}>'.format(set(map(tuple, self.data)))
@@ -123,7 +123,7 @@ class PDA:
                 if (input.startswith(input_prefix) and
                         stack.startswith(stack_prefix)):
                     for next_state, next_stack in entries:
-                        yield Datum(
+                        yield Config(
                                 next_state,
                                 input[len(input_prefix):],
                                 next_stack+stack[len(stack_prefix):])
