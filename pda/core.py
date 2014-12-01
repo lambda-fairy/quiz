@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from collections import namedtuple
 from itertools import permutations
 
@@ -53,7 +51,7 @@ class Template:
         self.accept_condition = accept_condition
 
     def is_deterministic(self):
-        """Return True iff the PDA is deterministic."""
+        """Return True if the PDA is deterministic."""
         for subtable in self.table:
             for items_i, items_j in permutations(subtable.items(), 2):
                 (input_i, stack_i), entries_i = items_i
@@ -91,7 +89,7 @@ class PDA:
             raise RuntimeError('iteration limit reached (is there an infinite loop?)')
 
     def accepts(self):
-        """Return True iff the PDA is in an accepting state."""
+        """Return True if the PDA is in an accepting state."""
         if self.accept_condition & FINAL_STATE and not self.is_final_state():
             return False
         if self.accept_condition & EMPTY_STACK and not self.is_empty_stack():
@@ -104,12 +102,12 @@ class PDA:
         return not self.data
 
     def is_final_state(self):
-        """Return True iff the PDA is in a final state."""
+        """Return True if the PDA is in a final state."""
         return any(not input and state in self.final_states for state, input, _ in self.data)
 
     def is_empty_stack(self):
-        """Return True iff the PDA has an empty stack."""
-        return any(not input and len(stack) == 0 for _, input, stack in self.data)
+        """Return True if the PDA has an empty stack."""
+        return any(not input and not stack for _, input, stack in self.data)
 
     def step(self):
         """Advance the automaton by a single transition."""
