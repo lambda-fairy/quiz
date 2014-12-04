@@ -1,7 +1,7 @@
 from collections import defaultdict
 from grako.exceptions import GrakoException
 
-from .autogen import PDAParser, PDASemantics as PDASemanticsBase
+from .autogen import PDAParser, PDASemantics
 
 
 __all__ = ['parse_table']
@@ -20,29 +20,25 @@ def parse_table(code):
     return [table[i] for i in range(1+max(table.keys()))]
 
 
-class PDASemantics(PDASemanticsBase):
-    def input(self, ast):
-        return epsilon(ast)
+class MySemantics(PDASemantics):
+    def number(self, s):
+        return int(s)
 
-    def stack(self, ast):
-        return epsilon(ast)
-
-
-def epsilon(s):
-    if s == 'e':
-        return ''
-    else:
-        return s
+    def word(self, s):
+        if s == 'e':
+            return ''
+        else:
+            return s
 
 
 def parse_clauses(code):
     for line in code.split('\n'):
         line = line.strip()
         if line:
-            semantics = PDASemantics()
+            semantics = MySemantics()
             try:
-                result = PDAParser().parse(code, 'clause', semantics=semantics)
+                result = PDAParser().parse(line, 'clause', semantics=semantics)
             except GrakoException:
-                raise ValueError('invalid syntax') from None
+                raise ValueError('invalid syntax')
             else:
                 yield result

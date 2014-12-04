@@ -1,16 +1,14 @@
 clause = pattern:pattern '->' outputs:outputs $ ;
 
-pattern = '(' state:state ',' input:input ',' stack:stack ')' ;
+pattern = '(' state:number ',' input:word ',' stack:word ')' ;
 
 outputs
     = '{' [ @+:output { ',' @+:output }* ] '}'
     | @+:output
     ;
 
-output = '(' state:state ',' stack:stack ')';
+output = '(' state:number ',' stack:word ')';
 
-state = /[0-9]+/ ;
+number = /[0-9]+/ ;
 
-input = /[0-9A-Za-z]+/ ;
-
-stack = /[0-9A-Za-z]+/ ;
+word = /[0-9A-Za-z]+/ ;
