@@ -1,5 +1,5 @@
 from collections import namedtuple
-from itertools import permutations
+from itertools import count, permutations
 
 
 # Acceptance modes
@@ -63,7 +63,9 @@ class Template:
 
 
 class PDA:
-    def __init__(self, template, input):
+    def __init__(self, template, input,
+            max_iterations=None, max_configs=None, max_stack_size=None):
+
         # Check input contains only valid symbols
         if not all(symbol in template.input_alpha for symbol in input):
             raise ValueError('invalid input')
@@ -75,11 +77,16 @@ class PDA:
         # Initial state is assumed to be q0
         self.data = frozenset({Config(0, input, template.initial_stack)})
 
+        self.max_iterations = max_iterations
+        self.max_configs = max_configs
+        self.max_stack_size = max_stack_size
+
     def __repr__(self):
         return '<PDA {}>'.format(set(map(tuple, self.data)))
 
-    def run(self, max_iterations=100):
-        for iteration in range(max_iterations):
+    def run(self):
+        iterations = range(self.max_iterations) if self.max_iterations else count()
+        for i in iterations:
             if self.accepts():
                 return True
             if self.rejects():
@@ -111,7 +118,14 @@ class PDA:
 
     def step(self):
         """Advance the automaton by a single transition."""
-        self.data = frozenset(self._step_generator(self.table, self.data))
+        new_data = self._step_generator(self.table, self.data)
+        if self.max_configs:
+            new_data = limit_len(new_data, self.max_configs, 'too many configurations')
+        new_data = frozenset(new_data)
+        if (self.max_stack_size and
+                any(len(config.stack) > self.max_stack_size for config in new_data)):
+            raise RuntimeError('stack too large')
+        self.data = new_data
 
     @staticmethod
     def _step_generator(table, data):
@@ -130,3 +144,12 @@ class PDA:
 def overlap(a, b):
     """Determine if one string is a prefix of the other."""
     return a.startswith(b) or b.startswith(a)
+
+
+def limit_len(iterable, limit, error='too many items'):
+    """Raise an exception when the iterable has too many elements."""
+    for index, elem in enumerate(iterable):
+        if index == limit:
+            raise RuntimeError(error)
+        else:
+            yield elem
