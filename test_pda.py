@@ -1,10 +1,12 @@
+import pytest
+
 import pda
 
 
 # This PDA matches the language { 0^n 1^n | n : N }
 pda_0n_1n = pda.Template(
-        list('01'),
-        list('AZ'),
+        '01',
+        'AZ',
         [
             {
                 ('0', 'Z'): {(0, 'AZ')},
@@ -50,3 +52,43 @@ def test_matching():
             assert matches, '{!r} does not match when it should'.format(s)
         else:
             assert not matches, '{!r} matches when it should not'.format(s)
+
+
+pda_infinite_loop = pda.Template(
+        '0',
+        'Z',
+        [
+            {
+                ('', 'Z'): {(0, 'ZZ')},
+                },
+            ],
+        'Z',
+        set(),
+        pda.FINAL_STATE)
+
+pda_exponential = pda.Template(
+        '0',
+        'AB',
+        [
+            {
+                ('', ''): {(0, 'A'), (0, 'B')},
+                },
+            ],
+        'A',
+        set(),
+        pda.FINAL_STATE)
+
+def test_iteration_limit():
+    with pytest.raises(RuntimeError) as excinfo:
+        pda.PDA(pda_infinite_loop, '', max_iterations=100).run()
+    assert 'iteration' in str(excinfo.value)
+
+def test_stack_limit():
+    with pytest.raises(RuntimeError) as excinfo:
+        pda.PDA(pda_infinite_loop, '', max_stack_size=100).run()
+    assert 'stack' in str(excinfo.value)
+
+def test_config_limit():
+    with pytest.raises(RuntimeError) as excinfo:
+        pda.PDA(pda_exponential, '', max_configs=100).run()
+    assert 'config' in str(excinfo.value)
