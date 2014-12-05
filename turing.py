@@ -1,15 +1,17 @@
+#!/usr/bin/env python3
+from itertools import chain
 import re
 import sys
 
-options = """{{ TEST.stdin | e('py') }}"""
-options = options.strip().split('\n')
 
 def ensure(b, s="assertion failed"):
     if not b:
         raise Exception(s)
 
+
 def sepby(s, sep):
     return r'(' + s + r')((' + sep + r')(' + s + r'))*'
+
 
 def parse(answer):
     '''Parse a TM from answer and return the transition table.
@@ -31,7 +33,7 @@ def parse(answer):
     answer = answer.replace('a','-1').replace('r','-2').replace('L','-1').replace('N','0').replace('R','1').replace('_','-1')
     try:
         table = eval(answer)
-    except:
+    except Exception:
         raise Exception(syntactic_error)
     # check that the table and final states represent a TM
     number_of_states = len(table)
@@ -46,54 +48,19 @@ def parse(answer):
             ensure(-1 <= direction <= 1, structural_error)
     return table
 
-student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
-try:
-    student_table = parse(student_answer)
-except Exception as e:
-    print(e)
-    sys.exit()
 
-if "use student answer" in options:
-    correct_answer = student_answer
-    correct_table = student_table
-else:
-    correct_answer = """{{ TEST.testcode | e('py') }}"""
-    correct_table = parse(correct_answer)
+def strings_of_length(upto, alpha='0'):
+    if upto < 0:
+        raise ValueError('cannot generate strings of length {}'.format(upto))
+    elif upto == 0:
+        yield ''
+    else:
+        strings = list(strings_of_length(upto-1, alpha))
+        yield from strings
+        for string in strings:
+            for char in alpha:
+                yield char + string
 
-def unary_strings_of_length(lo, hi=None):
-    if hi == None:
-        hi = lo
-    result = []
-    for length in range(lo, hi+1):
-        result.append('0'*length)
-    return result
-
-def binary_strings_of_length(lo, hi=None):
-    if hi == None:
-        hi = lo
-    result = []
-    for length in range(hi+1):
-        if length == 0:
-            current = ['']
-        else:
-            current = [ s+b for b in ['0','1'] for s in current ]
-        if lo <= length and length <= hi:
-            result += current
-    return result
-
-tests_options = [option[8:] for option in options if option.startswith("tests = ")]
-if len(tests_options) != 0:
-    tests = eval(tests_options[0])
-elif "use student answer" in options:
-    tests = unary_strings_of_length(0, 9)
-else:
-    tests = binary_strings_of_length(0, 9) + [
-        "111111111111111111111111111",
-        "000000000000000000000000000",
-        "000000000000000000000000100",
-        "000001010011100101110111",
-        "111110101100011010001000"
-    ]
 
 def simulate(table, right, max_steps=500):
     state = 0
@@ -102,7 +69,7 @@ def simulate(table, right, max_steps=500):
         max_steps -= 1
         symbol = '_' if len(right) == 0 else right[0]
         read = -1 if symbol == '_' else int(symbol)
-        assert(read < len(table[state])-1)
+        assert read < len(table[state]) - 1
         state, write, move = table[state][read]
         symbol = '_' if write == -1 else str(write)
         right = symbol + right[1:]
@@ -116,33 +83,82 @@ def simulate(table, right, max_steps=500):
             right = right[1:]
     if max_steps <= 0:
         return None
-    return (state,(left + right).strip('_'))
+    return (state, (left + right).strip('_'))
 
-result = "Good"
-for string in tests:
-    try:
-        student_answer = simulate(student_table, string)
-    except:
-        result = "There's an error in the automata representation."
-        break
-    correct_answer = simulate(correct_table, string)
-    if student_answer != correct_answer:
-        if student_answer == None:
-            result = "TM takes too many steps for input '" + string + "'."
-            break
-        elif correct_answer == None:
-            result = "TM should not terminate for input '" + string + "'."
-            break
-        elif student_answer[0] == -1 and correct_answer[0] == -2:
-            result = "Input '" + string + "' should be rejected."
-            break
-        elif student_answer[0] == -2 and correct_answer[0] == -1:
-            result = "Input '" + string + "' should be accepted."
-            break
-        elif "ignore output" not in options and student_answer[1] != correct_answer[1]:
-            result = "TM computes the wrong result for input '" + string + "'."
-            break
+
+class PropertyDict(dict):
+    """A dictionary that lets us write ``d['key']`` as ``d.key``."""
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError as ex:
+            raise AttributeError(name)
+
+
+def parse_options(option_str):
+    """Parse an option string into a PropertyDict. The string is
+    interpreted as Python code."""
+    options = dict(
+            ignore_output=False,
+            use_student_answer=False,
+            )
+    exec(option_str, globals(), options)
+    if 'tests' not in options:
+        if 'use_student_answer' in options:
+            options['tests'] = strings_of_length(upto=9, alpha='0')
         else:
-            pass
-print(result)
+            options['tests'] = chain(strings_of_length(upto=9, alpha='01'), [
+                "111111111111111111111111111",
+                "000000000000000000000000000",
+                "000000000000000000000000100",
+                "000001010011100101110111",
+                "111110101100011010001000",
+                ])
+    return PropertyDict(options)
 
+
+def run_tests(student_table, correct_table, options):
+    for string in options.tests:
+        try:
+            student_answer = simulate(student_table, string)
+        except Exception:
+            return "There's an error in the automata representation."
+        correct_answer = simulate(correct_table, string)
+        if student_answer != correct_answer:
+            if student_answer is None:
+                return "TM takes too many steps for input '" + string + "'."
+            elif correct_answer is None:
+                return "TM should not terminate for input '" + string + "'."
+            elif student_answer[0] == -1 and correct_answer[0] == -2:
+                return "Input '" + string + "' should be rejected."
+            elif student_answer[0] == -2 and correct_answer[0] == -1:
+                return "Input '" + string + "' should be accepted."
+            elif not options.ignore_output and student_answer[1] != correct_answer[1]:
+                return "TM computes the wrong result for input '" + string + "'."
+    return "Good"
+
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        option_str = """{{ TEST.stdin | e('py') }}"""
+        correct_answer = """{{ TEST.testcode | e('py') }}"""
+        student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
+    elif len(sys.argv) == 2:
+        option_str, correct_answer, student_answer = \
+                open(sys.argv[1]).read().split('\n---\n')
+    else:
+        raise SystemExit('Usage: {} [TEST_FILE]'.format(sys.argv[0]))
+
+    options = parse_options(option_str)
+
+    try:
+        student_table = parse(student_answer)
+    except Exception as e:
+        raise SystemExit(e)
+
+    if options.use_student_answer:
+        correct_table = student_table
+    else:
+        correct_table = parse(correct_answer)
+
+    print(run_tests(student_table, correct_table, options))
