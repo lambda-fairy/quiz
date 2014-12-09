@@ -36,19 +36,13 @@ def project(mapping, attrs):
     return {key: mapping[key] for key in attrs}
 
 
-def parse(pda_str):
-    try:
-        option_str, table_str = pda_str.split('---')
-    except ValueError:
-        option_str, table_str = '', pda_str
-    construction_options, execution_options, testing_options = parse_options(option_str)
+def parse(pda_str, construction_options, execution_options):
     deterministic = construction_options.pop('deterministic')
-    table = parse_table(table_str)
+    table = parse_table(pda_str)
     template = Template(table=table, **construction_options)
     if deterministic and not template.is_deterministic():
         raise ValueError('PDA is not deterministic')
-    return (lambda input: PDA(template, input, **execution_options).run(),
-            testing_options)
+    return lambda input: PDA(template, input, **execution_options).run()
 
 
 def strings_of_length(upto, alpha='01'):
@@ -64,14 +58,44 @@ def strings_of_length(upto, alpha='01'):
                 yield char + alpha
 
 
+def run_tests(run_student, run_correct, options):
+    for string in options['tests']:
+        try:
+            student_accepts = run_student(string)
+        except RuntimeError as e:
+            return "On input {!r}: {}".format(string, e)
+        except Exception as e:
+            return "There's an error in the automata representation."
+        correct_accepts = run_correct(string)
+        if student_accepts and not correct_accepts:
+            return "Input {!r} should be rejected.".format(string)
+        elif not student_accepts and correct_accepts:
+            return "Input {!r} should be accepted.".format(string)
+    return "Good"
+
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) == 1:
-        pda_str = sys.stdin.read()
+        option_str = """{{ TEST.stdin | e('py') }}"""
+        correct_answer = """{{ TEST.testcode | e('py') }}"""
+        student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
     elif len(sys.argv) == 2:
-        pda_str = open(sys.argv[1]).read()
+        option_str, correct_answer, student_answer = \
+                open(sys.argv[1]).read().split('---')
     else:
-        raise SystemExit('USAGE: {} [FILE]'.format(sys.argv[0]))
-    (run, testing_options) = parse(pda_str)
-    # TODO: do some better testing here
-    print('Accepted' if run('000111') else 'Rejected')
+        raise SystemExit('Usage: {} [TEST_FILE]'.format(sys.argv[0]))
+
+    construction_options, execution_options, testing_options = parse_options(option_str)
+
+    try:
+        run_student = parse(student_answer, construction_options, execution_options)
+    except Exception as e:
+        raise SystemExit(e)
+
+    if testing_options['use_student_answer']:
+        run_correct = run_student
+    else:
+        run_correct = parse(correct_answer, construction_options, execution_options)
+
+    print(run_tests(run_student, run_correct, testing_options))
