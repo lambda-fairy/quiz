@@ -145,7 +145,7 @@ if __name__ == '__main__':
         student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
     elif len(sys.argv) == 2:
         option_str, correct_answer, student_answer = \
-                open(sys.argv[1]).read().split('\n---\n')
+                open(sys.argv[1]).read().split('---')
     else:
         raise SystemExit('Usage: {} [TEST_FILE]'.format(sys.argv[0]))
 
