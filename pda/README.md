@@ -1,5 +1,5 @@
-COSC261 quiz checker
-====================
+COSC261 pushdown automata checker
+=================================
 
 You will need
 -------------

@@ -1,4 +1,5 @@
-from pda import *
+from .core import *
+from .parser import *
 
 
 def parse_options(option_str):
