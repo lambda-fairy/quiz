@@ -2,7 +2,7 @@ from pda import *
 
 
 def parse_options(option_str):
-    construction = dict(
+    build_options = dict(
             input_alpha='01',
             stack_alpha='AZ',
             initial_stack='Z',
@@ -10,39 +10,39 @@ def parse_options(option_str):
             deterministic=True,
             accept_condition=FINAL_STATE,
             )
-    execution = dict(
+    exec_options = dict(
             max_iterations=1000,
             max_configs=100,
             max_stack_size=100,
             )
-    testing = dict(
+    test_options = dict(
             use_student_answer=False,
             tests=strings_of_length(upto=9),
             )
 
     options = {}
-    options.update(construction)
-    options.update(execution)
-    options.update(testing)
+    options.update(build_options)
+    options.update(exec_options)
+    options.update(test_options)
 
     exec(option_str, globals(), options)
 
-    return (project(options, construction),
-            project(options, execution),
-            project(options, testing))
+    return (project(options, build_options),
+            project(options, exec_options),
+            project(options, test_options))
 
 
 def project(mapping, attrs):
     return {key: mapping[key] for key in attrs}
 
 
-def parse(pda_str, construction_options, execution_options):
-    deterministic = construction_options.pop('deterministic')
+def parse(pda_str, build_options, exec_options):
+    deterministic = build_options.pop('deterministic')
     table = parse_table(pda_str)
-    template = Template(table=table, **construction_options)
+    template = Template(table=table, **build_options)
     if deterministic and not template.is_deterministic():
         raise ValueError('PDA is not deterministic')
-    return lambda input: PDA(template, input, **execution_options).run()
+    return lambda input: PDA(template, input, **exec_options).run()
 
 
 def strings_of_length(upto, alpha='01'):
@@ -86,16 +86,16 @@ if __name__ == '__main__':
     else:
         raise SystemExit('Usage: {} [TEST_FILE]'.format(sys.argv[0]))
 
-    construction_options, execution_options, testing_options = parse_options(option_str)
+    build_options, exec_options, test_options = parse_options(option_str)
 
     try:
-        run_student = parse(student_answer, construction_options, execution_options)
+        run_student = parse(student_answer, build_options, exec_options)
     except Exception as e:
         raise SystemExit(e)
 
-    if testing_options['use_student_answer']:
+    if test_options['use_student_answer']:
         run_correct = run_student
     else:
-        run_correct = parse(correct_answer, construction_options, execution_options)
+        run_correct = parse(correct_answer, build_options, exec_options)
 
-    print(run_tests(run_student, run_correct, testing_options))
+    print(run_tests(run_student, run_correct, test_options))
