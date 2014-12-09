@@ -5,9 +5,6 @@ import re
 from .autogen import PDAParser, PDASemantics
 
 
-__all__ = ['parse_table']
-
-
 def parse_table(code):
     table = defaultdict(dict)
     final_states = None

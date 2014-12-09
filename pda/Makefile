@@ -1,5 +1,13 @@
+EGREP := grep -E
 GRAKO := grako
 PYTEST := py.test
+
+IMPORTS_REGEX := '^[[:space:]]*from[[:space:]]+(__future__|\.|pda)'
+
+all: run_pda.py
+
+run_pda.py: pda/core.py pda/autogen.py pda/parser.py pda/driver.py
+	$(EGREP) --invert-match --no-filename $(IMPORTS_REGEX) $+ > $@
 
 parsers: pda/autogen.py
 
@@ -9,4 +17,4 @@ pda/autogen.py: pda/pda.grako
 test: parsers
 	$(PYTEST) --verbose --ignore=env --doctest-modules
 
-.PHONY: parsers test
+.PHONY: all parsers test
