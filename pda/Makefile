@@ -23,4 +23,7 @@ pda/autogen_orig.py: pda/pda.grako
 test: parsers
 	$(PYTEST) --verbose --ignore=env --doctest-modules
 
+clean:
+	rm -f pda/autogen.py pda/autogen_orig.py run_pda.py
+
 .PHONY: all parsers test
