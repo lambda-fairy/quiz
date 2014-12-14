@@ -17,7 +17,7 @@ def parse_options(option_str):
             )
     test_options = dict(
             use_student_answer=False,
-            tests=strings_of_length(upto=9),
+            tests=strings_of_length(upto=9, alpha='01'),
             )
 
     options = {}
@@ -45,17 +45,25 @@ def parse(pda_str, build_options, exec_options):
     return lambda input: PDA(template, input, **exec_options).run()
 
 
-def strings_of_length(upto, alpha='01'):
-    if upto < 0:
-        raise ValueError('cannot build strings of negative length')
-    elif upto == 0:
-        yield ''
-    else:
-        strings = list(strings_of_length(upto-1, alpha))
-        yield from strings
-        for string in strings:
-            for char in alpha:
-                yield char + alpha
+def strings_of_length(upto, alpha):
+    """Return a list of all strings up to a specified length.
+
+    >>> strings_of_length(upto=5, alpha='a')
+    ['', 'a', 'aa', 'aaa', 'aaaa', 'aaaaa']
+
+    >>> strings_of_length(upto=2, alpha='01')
+    ['', '0', '1', '00', '01', '10', '11']
+    """
+
+    def generate(size):
+        if size == 0:
+            yield ''
+        else:
+            for string in generate(size-1):
+                for char in alpha:
+                    yield string + char
+
+    return [string for size in range(1+upto) for string in generate(size)]
 
 
 def run_tests(run_student, run_correct, options):
@@ -63,14 +71,14 @@ def run_tests(run_student, run_correct, options):
         try:
             student_accepts = run_student(string)
         except RuntimeError as e:
-            return "On input {!r}: {}".format(string, e)
+            return "On input {}: {}".format(string, e)
         except Exception as e:
             return "There's an error in the automata representation."
         correct_accepts = run_correct(string)
         if student_accepts and not correct_accepts:
-            return "Input {!r} should be rejected.".format(string)
+            return "Input {} should be rejected.".format(string)
         elif not student_accepts and correct_accepts:
-            return "Input {!r} should be accepted.".format(string)
+            return "Input {} should be accepted.".format(string)
     return "Good"
 
 
