@@ -1,0 +1,13 @@
+input_alpha = 'ab'
+stack_alpha = 'AB'
+accept_condition = EMPTY_STACK
+initial_stack = ''
+deterministic = False
+tests = strings_of_length(upto=5, alpha=input_alpha)
+use_student_answer = True
+---
+---
+(0, a, e) -> (0, A)
+(0, a, A) -> (0, e)
+(0, b, e) -> (0, B)
+(0, b, B) -> (0, e)
