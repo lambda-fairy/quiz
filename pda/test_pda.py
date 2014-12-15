@@ -92,3 +92,20 @@ def test_config_limit():
     with pytest.raises(RuntimeError) as excinfo:
         pda.PDA(pda_exponential, '', max_configs=100).run()
     assert 'config' in str(excinfo.value)
+
+
+def test_unreachable_state():
+    with pytest.raises(ValueError) as excinfo:
+        pda.Template(
+                '0',
+                'A',
+                {
+                    0: {
+                        ('0', ''): {(0, '')},
+                        },
+                    1: {},
+                    },
+                '',
+                {0},
+                pda.FINAL_STATE)
+    assert 'unreachable' in str(excinfo.value)
