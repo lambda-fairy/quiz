@@ -109,7 +109,7 @@ override them.
 
 Input and stack alphabet.
 
-    initial_stack = 'Z'
+    initial_stack = ''
 
 Initial contents of the stack. The top element is first, as per
 convention.

@@ -6,7 +6,7 @@ def parse_options(option_str):
     build_options = dict(
             input_alpha='01',
             stack_alpha='AZ',
-            initial_stack='Z',
+            initial_stack='',
             deterministic=True,
             accept_condition=FINAL_STATE,
             )
