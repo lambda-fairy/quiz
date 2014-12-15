@@ -55,8 +55,8 @@ alphanumeric strings. Each transition may read an arbitrary amount of
 input, and push and pop any number of symbols from the stack. If the
 transition set has only one element, the braces may be omitted.
 
-Each `(state, input, stack)` may only appear once. In other words, the
-fragment
+Each `(state, input, stack)` triple may only appear once. In other
+words, the fragment
 
     (0, 0, e) -> (0, A)
     (0, 0, e) -> (1, A)
