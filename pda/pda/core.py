@@ -15,7 +15,7 @@ Config = namedtuple('Config', 'state input stack')
 
 class Template:
     def __init__(self, input_alpha, stack_alpha, table, initial_stack,
-            final_states, accept_condition):
+            final_states, accept_condition, deterministic=False):
 
         if not table:
             raise ValueError('transition table must declare at least one state')
@@ -49,6 +49,9 @@ class Template:
         self.initial_stack = initial_stack
         self.final_states = final_states
         self.accept_condition = accept_condition
+
+        if deterministic and not self.is_deterministic():
+            raise ValueError('PDA is not deterministic')
 
     def is_deterministic(self):
         """Return True if the PDA is deterministic."""

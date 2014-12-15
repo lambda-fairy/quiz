@@ -37,11 +37,8 @@ def project(mapping, attrs):
 
 
 def parse(pda_str, build_options, exec_options):
-    deterministic = build_options.pop('deterministic')
     table, final_states = parse_table(pda_str)
     template = Template(table=table, final_states=final_states, **build_options)
-    if deterministic and not template.is_deterministic():
-        raise ValueError('PDA is not deterministic')
     return lambda input: PDA(template, input, **exec_options).run()
 
 
