@@ -17,30 +17,32 @@ class Template:
     def __init__(self, input_alpha, stack_alpha, table, initial_stack,
             final_states, accept_condition, deterministic=False):
 
-        if not table:
-            raise ValueError('transition table must declare at least one state')
+        if 0 not in table:
+            raise ValueError('transition table must include at least the initial state')
 
         # Check stack contains only valid symbols
         if not all(symbol in stack_alpha for symbol in initial_stack):
             raise ValueError('invalid initial stack')
 
-        # Check final states
-        for state in final_states:
-            if not (0 <= state < len(table)):
-                raise ValueError('invalid final state: {!r}'.format(state))
+        unreachable = set(final_states.union(table.keys()))
+        unreachable.discard(0)  # Initial state is always reachable
 
         # Check transition table
-        for subtable in table:
+        for subtable in table.values():
             for (input_prefix, stack_prefix), entries in subtable.items():
                 if not all(symbol in input_alpha for symbol in input_prefix):
                     raise ValueError('{!r} is not in the input alphabet'.format(input_symbol))
                 if not all(symbol in stack_alpha for symbol in stack_prefix):
                     raise ValueError('{!r} is not in the stack alphabet'.format(stack_symbol))
                 for state, stack in entries:
-                    if not (0 <= state < len(table)):
-                        raise ValueError('invalid state number: {!r}'.format(state))
+                    # If a transition leads to some state, then it's probably reachable
+                    unreachable.discard(state)
                     if not all(symbol in stack_alpha for symbol in stack):
                         raise ValueError('invalid stack symbols: {!r}'.format(stack))
+
+        # Check for states which have no transitions going into them
+        if unreachable:
+            raise ValueError('states {} are unreachable'.format(unreachable))
 
         # If everything's okay, construct the object
         self.input_alpha = input_alpha
@@ -55,7 +57,7 @@ class Template:
 
     def is_deterministic(self):
         """Return True if the PDA is deterministic."""
-        for subtable in self.table:
+        for subtable in self.table.values():
             for items_i, items_j in permutations(subtable.items(), 2):
                 (input_i, stack_i), entries_i = items_i
                 (input_j, stack_j), entries_j = items_j
@@ -133,7 +135,7 @@ class PDA:
     @staticmethod
     def _step_generator(table, data):
         for state, input, stack in data:
-            subtable = table[state]
+            subtable = table.get(state, {})
             for (input_prefix, stack_prefix), entries in subtable.items():
                 if (input.startswith(input_prefix) and
                         stack.startswith(stack_prefix)):

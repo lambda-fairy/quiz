@@ -7,19 +7,19 @@ import pda
 pda_0n_1n = pda.Template(
         '01',
         'AZ',
-        [
-            {
+        {
+            0: {
                 ('0', 'Z'): {(0, 'AZ')},
                 ('0', 'A'): {(0, 'AA')},
                 ('', 'Z'): {(1, 'Z')},
                 ('', 'A'): {(1, 'A')},
                 },
-            {
+            1: {
                 ('1', 'A'): {(1, '')},
                 ('', 'Z'): {(2, 'Z')},
                 },
-            {},
-            ],
+            2: {},
+            },
         'Z',
         {2},
         pda.FINAL_STATE)
@@ -57,11 +57,11 @@ def test_matching():
 pda_infinite_loop = pda.Template(
         '0',
         'Z',
-        [
-            {
+        {
+            0: {
                 ('', 'Z'): {(0, 'ZZ')},
                 },
-            ],
+            },
         'Z',
         set(),
         pda.FINAL_STATE)
@@ -69,11 +69,11 @@ pda_infinite_loop = pda.Template(
 pda_exponential = pda.Template(
         '0',
         'AB',
-        [
-            {
+        {
+            0: {
                 ('', ''): {(0, 'A'), (0, 'B')},
                 },
-            ],
+            },
         'A',
         set(),
         pda.FINAL_STATE)

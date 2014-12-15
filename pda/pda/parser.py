@@ -22,8 +22,7 @@ def parse_table(code):
                 raise ValueError('duplicate final state declarations')
             else:
                 final_states = clause
-    return ([table[i] for i in range(1+max(table.keys()))],
-            final_states or frozenset())
+    return (dict(table), final_states or frozenset())
 
 
 class MySemantics(PDASemantics):
