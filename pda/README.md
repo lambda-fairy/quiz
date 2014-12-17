@@ -68,6 +68,9 @@ is illegal. Instead, place them all on a single line, like this:
 The special token `e` stands for the empty string. To prevent confusion,
 ensure your input and stack alphabets do not contain the letter E.
 
+The initial state is always state `0`. You must declare at least one
+transition from this state.
+
 To declare final states, write a set of state numbers on its own line.
 For example:
 
@@ -107,7 +110,8 @@ override them.
     input_alpha = '01'
     stack_alpha = 'AZ'
 
-Input and stack alphabet.
+Input and stack alphabet. NOTE: If you change the input alphabet, you must
+override the tests as well. See the "Test Options" section for details.
 
     initial_stack = ''
 
@@ -157,5 +161,10 @@ checking the syntax.
 
     tests = strings_of_length(upto=9, alpha='01')
 
-A list of strings to test the PDA with. To add extra tests, use the `+=`
-operator: `tests += ['extra', 'tests', 'here']`.
+A list of strings to test the PDA with. To append extra tests, use the
+`+=` operator: `tests += ['extra', 'tests', 'here']`.
+
+The default tests only include binary strings, which can be problematic
+if you choose a different input alphabet. A simple fix is to recompute
+the test list using the new alphabet. For example, with alphabet `'ab'`,
+use: `tests = strings_of_length(upto=9, alpha='ab')`.
