@@ -13,7 +13,14 @@ FINAL_STATE_AND_EMPTY_STACK = FINAL_STATE | EMPTY_STACK
 Config = namedtuple('Config', 'state input stack')
 
 
-class Template:
+class PDA:
+    """A pushdown automaton. This class deals with the static structure
+    of the PDA: it stores the transition table and input/stack alphabets,
+    and checks if the automaton is deterministic.
+
+    To run a PDA on an input string, see ``PDASimulator``.
+    """
+
     def __init__(self, input_alpha, stack_alpha, table, initial_stack,
             final_states, accept_condition, deterministic=False):
 
@@ -67,29 +74,43 @@ class Template:
         return True
 
 
-class PDA:
-    def __init__(self, template, input,
+class PDASimulator:
+    """Simulates a PDA over a specific input string.
+
+    Use ``run()`` to drive the PDA to completion, or ``step()`` to run
+    it one step at a time.
+    """
+
+    def __init__(self, automaton, input,
             max_iterations=None, max_configs=None, max_stack_size=None):
+        """Construct a simulator with PDA ``automaton`` and input string
+        ``input``."""
 
         # Check input contains only valid symbols
-        if not all(symbol in template.input_alpha for symbol in input):
+        if not all(symbol in automaton.input_alpha for symbol in input):
             raise ValueError('invalid input')
 
-        self.table = template.table
-        self.final_states = template.final_states
-        self.accept_condition = template.accept_condition
+        self.table = automaton.table
+        self.final_states = automaton.final_states
+        self.accept_condition = automaton.accept_condition
 
         # Initial state is assumed to be q0
-        self.data = frozenset({Config(0, input, template.initial_stack)})
+        self.data = frozenset({Config(0, input, automaton.initial_stack)})
 
         self.max_iterations = max_iterations
         self.max_configs = max_configs
         self.max_stack_size = max_stack_size
 
     def __repr__(self):
-        return '<PDA {}>'.format(set(map(tuple, self.data)))
+        return '<PDASimulator {}>'.format(set(map(tuple, self.data)))
 
     def run(self):
+        """Run the PDA to completion.
+
+        Return True if it accepts, False if it rejects, or raise
+        RuntimeError if it breaks any execution limit.
+        """
+
         iterations = range(self.max_iterations) if self.max_iterations else count()
         for i in iterations:
             if self.accepts():
@@ -123,7 +144,7 @@ class PDA:
 
     def step(self):
         """Advance the automaton by a single transition."""
-        new_data = self._step_generator(self.table, self.data)
+        new_data = self._next_configs()
         if self.max_configs:
             new_data = limit_len(new_data, self.max_configs, 'too many configurations')
         new_data = frozenset(new_data)
@@ -132,10 +153,11 @@ class PDA:
             raise RuntimeError('stack too large')
         self.data = new_data
 
-    @staticmethod
-    def _step_generator(table, data):
-        for state, input, stack in data:
-            subtable = table.get(state, {})
+    def _next_configs(self):
+        """Generate all the configurations that can be reached by a
+        single transition."""
+        for state, input, stack in self.data:
+            subtable = self.table.get(state, {})
             for (input_prefix, stack_prefix), entries in subtable.items():
                 if (input.startswith(input_prefix) and
                         stack.startswith(stack_prefix)):

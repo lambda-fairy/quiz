@@ -4,7 +4,7 @@ import pda
 
 
 # This PDA matches the language { 0^n 1^n | n : N }
-pda_0n_1n = pda.Template(
+pda_0n_1n = pda.PDA(
         '01',
         'AZ',
         {
@@ -47,14 +47,14 @@ def test_deterministic():
 
 def test_matching():
     for s in binary_strings():
-        matches = pda.PDA(pda_0n_1n, s).run()
+        matches = pda.PDASimulator(pda_0n_1n, s).run()
         if is_0n_1n(s):
             assert matches, '{!r} does not match when it should'.format(s)
         else:
             assert not matches, '{!r} matches when it should not'.format(s)
 
 
-pda_infinite_loop = pda.Template(
+pda_infinite_loop = pda.PDA(
         '0',
         'Z',
         {
@@ -66,7 +66,7 @@ pda_infinite_loop = pda.Template(
         set(),
         pda.FINAL_STATE)
 
-pda_exponential = pda.Template(
+pda_exponential = pda.PDA(
         '0',
         'AB',
         {
@@ -80,23 +80,23 @@ pda_exponential = pda.Template(
 
 def test_iteration_limit():
     with pytest.raises(RuntimeError) as excinfo:
-        pda.PDA(pda_infinite_loop, '', max_iterations=100).run()
+        pda.PDASimulator(pda_infinite_loop, '', max_iterations=100).run()
     assert 'iteration' in str(excinfo.value)
 
 def test_stack_limit():
     with pytest.raises(RuntimeError) as excinfo:
-        pda.PDA(pda_infinite_loop, '', max_stack_size=100).run()
+        pda.PDASimulator(pda_infinite_loop, '', max_stack_size=100).run()
     assert 'stack' in str(excinfo.value)
 
 def test_config_limit():
     with pytest.raises(RuntimeError) as excinfo:
-        pda.PDA(pda_exponential, '', max_configs=100).run()
+        pda.PDASimulator(pda_exponential, '', max_configs=100).run()
     assert 'config' in str(excinfo.value)
 
 
 def test_unreachable_state():
     with pytest.raises(ValueError) as excinfo:
-        pda.Template(
+        pda.PDA(
                 '0',
                 'A',
                 {

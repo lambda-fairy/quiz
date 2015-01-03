@@ -33,13 +33,27 @@ def parse_options(option_str):
 
 
 def project(mapping, attrs):
+    """Return a copy of ``mapping`` with its attributes restricted to
+    those in ``attrs``.
+
+    >>> project({'a': 1, 'b': 2}, ['a'])
+    {'a': 1}
+    """
     return {key: mapping[key] for key in attrs}
 
 
-def parse(pda_str, build_options, exec_options):
-    table, final_states = parse_table(pda_str)
-    template = Template(table=table, final_states=final_states, **build_options)
-    return lambda input: PDA(template, input, **exec_options).run()
+def parse_automaton(pda_str, build_options):
+    """Parse a string describing a PDA.
+
+    Return a function which, when called with an input string, runs the
+    PDA and returns the result.
+    """
+    table, final_states = parse_transition_table(pda_str)
+    automaton = PDA(table=table, final_states=final_states, **build_options)
+    def run(input):
+        simulator = PDASimulator(automaton, input, **exec_options)
+        return simulator.run()
+    return run
 
 
 def strings_of_length(upto, alpha):
@@ -82,25 +96,30 @@ def run_tests(run_student, run_correct, options):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) == 1:
+        # If no command line arguments are given, assume we're on the server
         option_str = """{{ TEST.stdin | e('py') }}"""
         correct_answer = """{{ TEST.testcode | e('py') }}"""
         student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
     elif len(sys.argv) == 2:
+        # Read data from the given file
         option_str, correct_answer, student_answer = \
                 open(sys.argv[1]).read().split('---')
     else:
         raise SystemExit('Usage: {} [TEST_FILE]'.format(sys.argv[0]))
 
+    # Parse the option string
     build_options, exec_options, test_options = parse_options(option_str)
 
+    # Parse the PDAs
     try:
-        run_student = parse(student_answer, build_options, exec_options)
+        run_student = parse_automaton(student_answer, build_options, exec_options)
     except Exception as e:
         raise SystemExit(e)
 
     if test_options['use_student_answer']:
         run_correct = run_student
     else:
-        run_correct = parse(correct_answer, build_options, exec_options)
+        run_correct = parse_automaton(correct_answer, build_options, exec_options)
 
+    # If everything's okay, run the tests
     print(run_tests(run_student, run_correct, test_options))
