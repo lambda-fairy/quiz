@@ -53,7 +53,7 @@ def parse_clauses(code):
                 yield True, result
 
 
-FINAL_STATES_RE = re.compile(r'\{\d+(?:,\d+)*\}$')
+FINAL_STATES_RE = re.compile(r'\{(?:\d+(?:,\d+)*)?\}$')
 def is_final_states(line):
     line = re.sub(r'\s+', '', line)
-    return FINAL_STATES_RE.match(line)
+    return bool(FINAL_STATES_RE.match(line))
