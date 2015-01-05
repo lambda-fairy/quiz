@@ -1,29 +1,22 @@
 EGREP := grep -E
-GRAKO := grako
 PYTEST := py.test
 SED := sed
+
+MODULES := pda/core.py pda/parser.py pda/driver.py
 
 IMPORTS_REGEX := '^[[:space:]]*from[[:space:]]+(__future__|\.|pda)'
 
 all: run_pda.py
 
-run_pda.py: pda/core.py pda/autogen.py pda/parser.py pda/driver.py
+run_pda.py: $(MODULES)
 	echo '#!/usr/bin/env python3' > $@
 	$(EGREP) --invert-match --no-filename $(IMPORTS_REGEX) $+ >> $@
 	chmod +x $@
 
-parsers: pda/autogen.py
-
-pda/autogen.py: pda/autogen_orig.py
-	$(SED) --quiet --expression='/^if __name__ ==/q; p' $< > $@
-
-pda/autogen_orig.py: pda/pda.grako
-	$(GRAKO) $< --output $@ --name PDA
-
-test: parsers
-	$(PYTEST) --verbose --ignore=env --doctest-modules
+test: $(MODULES) test_pda.py
+	$(PYTEST) --verbose --doctest-modules $+
 
 clean:
-	rm -f pda/autogen.py pda/autogen_orig.py run_pda.py
+	rm -f run_pda.py
 
-.PHONY: all parsers test
+.PHONY: all test clean

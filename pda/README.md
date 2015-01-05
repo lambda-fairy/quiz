@@ -8,19 +8,11 @@ You will need
 
 * GNU Make
 
-* [pip][], for installing extra packages
-
-[pip]: https://pip.pypa.io
-
 
 Quick start
 -----------
 
-First, install dependencies:
-
-    sudo pip install -r requirements.txt
-
-Then build the script:
+Build the script with make:
 
     make
 
@@ -30,15 +22,23 @@ If successful, the script should be in `run_pda.py`.
 Testing
 -------
 
-The verifier comes with automated tests. To run these, use:
+The verifier comes with automated tests.
 
-    make test
+To run these, first install the [py.test][] library:
+
+    sudo apt-get install python3-pytest
+
+Then:
+
+    make test PYTEST=py.test-3
 
 Alternatively, you can run the verifier manually:
 
     python3 -m pda.driver examples/palindrome.txt
 
 More examples can be found in the `examples` directory.
+
+[py.test]: http://pytest.org/
 
 
 PDA syntax
