@@ -4,7 +4,7 @@ SED := sed
 
 MODULES := pda/core.py pda/parser.py pda/driver.py
 
-IMPORTS_REGEX := '^[[:space:]]*from[[:space:]]+(__future__|\.|pda)'
+IMPORTS_REGEX := '^[[:space:]]*from[[:space:]]+\.'
 
 all: run_pda.py
 
