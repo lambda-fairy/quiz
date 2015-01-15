@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from itertools import chain
 import re
 import sys
 
@@ -49,17 +48,25 @@ def parse(answer):
     return table
 
 
-def strings_of_length(upto, alpha='0'):
-    if upto < 0:
-        raise ValueError('cannot generate strings of length {}'.format(upto))
-    elif upto == 0:
-        yield ''
-    else:
-        strings = list(strings_of_length(upto-1, alpha))
-        yield from strings
-        for string in strings:
-            for char in alpha:
-                yield char + string
+def strings_of_length(upto, alpha):
+    """Return a list of all strings up to a specified length.
+
+    >>> strings_of_length(upto=5, alpha='a')
+    ['', 'a', 'aa', 'aaa', 'aaaa', 'aaaaa']
+
+    >>> strings_of_length(upto=2, alpha='01')
+    ['', '0', '1', '00', '01', '10', '11']
+    """
+
+    def generate(size):
+        if size == 0:
+            yield ''
+        else:
+            for string in generate(size-1):
+                for char in alpha:
+                    yield string + char
+
+    return [string for size in range(1+upto) for string in generate(size)]
 
 
 def simulate(table, right, max_steps=500):
@@ -107,13 +114,13 @@ def parse_options(option_str):
         if 'use_student_answer' in options:
             options['tests'] = strings_of_length(upto=9, alpha='0')
         else:
-            options['tests'] = chain(strings_of_length(upto=9, alpha='01'), [
+            options['tests'] = strings_of_length(upto=9, alpha='01') + [
                 "111111111111111111111111111",
                 "000000000000000000000000000",
                 "000000000000000000000000100",
                 "000001010011100101110111",
                 "111110101100011010001000",
-                ])
+                ]
     return PropertyDict(options)
 
 
