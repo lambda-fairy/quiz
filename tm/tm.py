@@ -93,17 +93,8 @@ def simulate(table, right, max_steps=500):
     return (state, (left + right).strip('_'))
 
 
-class PropertyDict(dict):
-    """A dictionary that lets us write ``d['key']`` as ``d.key``."""
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError as ex:
-            raise AttributeError(name)
-
-
 def parse_options(option_str):
-    """Parse an option string into a PropertyDict. The string is
+    """Parse an option string into a dictionary. The string is
     interpreted as Python code."""
     options = dict(
             ignore_output=False,
@@ -121,11 +112,11 @@ def parse_options(option_str):
                 "000001010011100101110111",
                 "111110101100011010001000",
                 ]
-    return PropertyDict(options)
+    return options
 
 
 def run_tests(student_table, correct_table, options):
-    for string in options.tests:
+    for string in options['tests']:
         try:
             student_answer = simulate(student_table, string)
         except Exception:
@@ -140,7 +131,7 @@ def run_tests(student_table, correct_table, options):
                 return "Input '" + string + "' should be rejected."
             elif student_answer[0] == -2 and correct_answer[0] == -1:
                 return "Input '" + string + "' should be accepted."
-            elif not options.ignore_output and student_answer[1] != correct_answer[1]:
+            elif not options['ignore_output'] and student_answer[1] != correct_answer[1]:
                 return "TM computes the wrong result for input '" + string + "'."
     return "Good"
 
@@ -163,7 +154,7 @@ if __name__ == '__main__':
     except Exception as e:
         raise SystemExit(e)
 
-    if options.use_student_answer:
+    if options['use_student_answer']:
         correct_table = student_table
     else:
         correct_table = parse(correct_answer)
