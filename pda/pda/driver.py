@@ -42,7 +42,7 @@ def project(mapping, attrs):
     return {key: mapping[key] for key in attrs}
 
 
-def parse_automaton(pda_str, build_options):
+def parse_automaton(pda_str, build_options, exec_options):
     """Parse a string describing a PDA.
 
     Return a function which, when called with an input string, runs the
