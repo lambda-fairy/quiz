@@ -58,15 +58,11 @@ def strings_of_length(upto, alpha):
     ['', '0', '1', '00', '01', '10', '11']
     """
 
-    def generate(size):
-        if size == 0:
-            yield ''
-        else:
-            for string in generate(size-1):
-                for char in alpha:
-                    yield string + char
-
-    return [string for size in range(1+upto) for string in generate(size)]
+    result = buffer = ['']
+    for size in range(1, 1+upto):
+        buffer = [string+char for string in buffer for char in alpha]
+        result.extend(buffer)
+    return result
 
 
 def simulate(table, right, max_steps=500):
