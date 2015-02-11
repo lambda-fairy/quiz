@@ -110,8 +110,9 @@ override them.
     input_alpha = '01'
     stack_alpha = 'AZ'
 
-Input and stack alphabet. NOTE: If you change the input alphabet, you must
-override the tests as well. See the "Test Options" section for details.
+Input and stack alphabet. If you don't provide your own test cases (see
+below), the simulator will generate its own tests from the input
+alphabet.
 
     initial_stack = ''
 
@@ -159,12 +160,7 @@ Maximum number of symbols on the stack.
 If True, assume the student's answer is correct, effectively only
 checking the syntax.
 
-    tests = strings_of_length(upto=9, alpha='01')
+    tests = strings_of_length(upto=9, alpha=input_alpha)
 
-A list of strings to test the PDA with. To append extra tests, use the
-`+=` operator: `tests += ['extra', 'tests', 'here']`.
-
-The default tests only include binary strings, which can be problematic
-if you choose a different input alphabet. A simple fix is to recompute
-the test list using the new alphabet. For example, with alphabet `'ab'`,
-use: `tests = strings_of_length(upto=9, alpha='ab')`.
+A list of strings to test the PDA with. If you don't set this option,
+the simulator will generate a default set automatically.

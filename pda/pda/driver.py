@@ -17,7 +17,7 @@ def parse_options(option_str):
             )
     test_options = dict(
             use_student_answer=False,
-            tests=strings_of_length(upto=9, alpha='01'),
+            tests=None,
             )
 
     options = {}
@@ -26,6 +26,12 @@ def parse_options(option_str):
     options.update(test_options)
 
     exec(option_str, globals(), options)
+
+    if options['tests'] is None:
+        # If the question writer didn't set any tests,
+        # generate a default set from the input alphabet
+        options['tests'] = \
+                strings_of_length(upto=9, alpha=options['input_alpha'])
 
     return (project(options, build_options),
             project(options, exec_options),
