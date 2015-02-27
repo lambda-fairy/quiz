@@ -136,10 +136,13 @@ def run_tests(student_table, correct_table, options):
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
+        # On the quiz server, these string constants will be replaced
+        # with the real input
         option_str = """{{ TEST.stdin | e('py') }}"""
         correct_answer = """{{ TEST.testcode | e('py') }}"""
         student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
     elif len(sys.argv) == 2:
+        # Read input from a file, for testing
         option_str, correct_answer, student_answer = \
                 open(sys.argv[1]).read().split('---')
     else:
