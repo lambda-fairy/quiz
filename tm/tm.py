@@ -95,19 +95,21 @@ def parse_options(option_str):
     options = dict(
             ignore_output=False,
             use_student_answer=False,
+            input_alpha='01'
             )
     exec(option_str, globals(), options)
     if 'tests' not in options:
-        if 'use_student_answer' in options:
-            options['tests'] = strings_of_length(upto=9, alpha='0')
-        else:
-            options['tests'] = strings_of_length(upto=9, alpha='01') + [
-                "111111111111111111111111111",
-                "000000000000000000000000000",
-                "000000000000000000000000100",
-                "000001010011100101110111",
-                "111110101100011010001000",
-                ]
+        options['tests'] = strings_of_length(upto=9, alpha=options['input_alpha'])
+        # Test long strings
+        for char in input_alpha:
+            options['tests'].append(30*char)
+        # Test a few "random" strings
+        # We initialize the generator with a constant seed, to ensure
+        # consistency between runs
+        generator = Random(0)
+        for i in range(10):
+            s = ''.join(generator.choice(input_alpha) for _ in range(30))
+            options['tests'].append(s)
     return options
 
 
