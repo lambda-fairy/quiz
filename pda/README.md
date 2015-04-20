@@ -107,8 +107,8 @@ override them.
 
 ### Automaton options
 
-    input_alpha = '01'
-    stack_alpha = 'AZ'
+    input_alpha = 'ab'
+    stack_alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 Input and stack alphabet. If you don't provide your own test cases (see
 below), the simulator will generate its own tests from the input
@@ -119,7 +119,7 @@ alphabet.
 Initial contents of the stack. The top element is first, as per
 convention.
 
-    deterministic = True
+    deterministic = False
 
 Whether to enforce that the automaton is deterministic. If True, any
 answer that is not deterministic per [this definition][1] will be
@@ -127,7 +127,7 @@ rejected.
 
 [1]: https://en.wikipedia.org/wiki/Deterministic_pushdown_automaton#Formal_definition
 
-    accept_condition = FINAL_STATE
+    accept_condition = FINAL_STATE | EMPTY_STACK
 
 Whether to accept by empty stack (`EMPTY_STACK`), final state
 (`FINAL_STATE`), or requiring both (`FINAL_STATE | EMPTY_STACK`).
@@ -160,7 +160,7 @@ Maximum number of symbols on the stack.
 If True, assume the student's answer is correct, effectively only
 checking the syntax.
 
-    tests = strings_of_length(upto=9, alpha=input_alpha)
+    tests = strings_of_length(upto=10, alpha=input_alpha)
 
 A list of strings to test the PDA with. If you don't set this option,
 the simulator will generate a default set automatically.

@@ -4,11 +4,11 @@ from .parser import *
 
 def parse_options(option_str):
     build_options = dict(
-            input_alpha='01',
-            stack_alpha='AZ',
+            input_alpha='ab',
+            stack_alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZ',
             initial_stack='',
-            deterministic=True,
-            accept_condition=FINAL_STATE,
+            deterministic=False,
+            accept_condition=FINAL_STATE | EMPTY_STACK,
             )
     exec_options = dict(
             max_iterations=1000,
@@ -31,7 +31,7 @@ def parse_options(option_str):
         # If the question writer didn't set any tests,
         # generate a default set from the input alphabet
         options['tests'] = \
-                strings_of_length(upto=9, alpha=options['input_alpha'])
+                strings_of_length(upto=10, alpha=options['input_alpha'])
 
     return (project(options, build_options),
             project(options, exec_options),
