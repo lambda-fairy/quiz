@@ -99,8 +99,8 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) == 1:
         # If no command line arguments are given, assume we're on the server
-        option_str = """{{ TEST.stdin | e('py') }}"""
-        correct_answer = """{{ TEST.testcode | e('py') }}"""
+        option_str = """{{ TEST.extra | e('py') }}"""
+        correct_answer = """{{ QUESTION.answer | e('py') }}"""
         student_answer = """{{ STUDENT_ANSWER | e('py') }}"""
     elif len(sys.argv) == 2:
         # Read data from the given file
