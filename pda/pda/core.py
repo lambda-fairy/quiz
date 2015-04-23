@@ -37,12 +37,23 @@ class PDA:
         # Check transition table
         for subtable in table.values():
             for (input_prefix, stack_prefix), entries in subtable.items():
-                if not all(symbol in input_alpha for symbol in input_prefix):
-                    raise ValueError('{!r} is not in the input alphabet'.format(input_symbol))
-                if not all(symbol in stack_alpha for symbol in stack_prefix):
-                    raise ValueError('{!r} is not in the stack alphabet'.format(stack_symbol))
+                # Check that all input patterns are in the input alphabet
+                bad_symbols = [symbol for symbol in input_prefix
+                        if symbol not in input_alpha]
+                if bad_symbols:
+                    raise ValueError(
+                            '{!r} is not in the input alphabet'
+                            .format(bad_symbols[0]))
+                # Check that all stack patterns are in the stack alphabet
+                bad_symbols = [symbol for symbol in stack_prefix
+                        if symbol not in stack_alpha]
+                if bad_symbols:
+                    raise ValueError(
+                            '{!r} is not in the stack alphabet'
+                            .format(bad_symbols[0]))
                 for state, stack in entries:
-                    # If a transition leads to some state, then it's probably reachable
+                    # If there is a transition leading to some state, then that
+                    # state is (probably) reachable
                     unreachable.discard(state)
                     if not all(symbol in stack_alpha for symbol in stack):
                         raise ValueError('invalid stack symbols: {!r}'.format(stack))
