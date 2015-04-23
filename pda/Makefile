@@ -8,6 +8,7 @@ IMPORTS_REGEX := '^[[:space:]]*from[[:space:]]+\.'
 
 all: run_pda.py
 
+# Merge all the modules into a single file (hacky!)
 run_pda.py: $(MODULES)
 	echo '#!/usr/bin/env python3' > $@
 	$(EGREP) --invert-match --no-filename $(IMPORTS_REGEX) $+ >> $@
