@@ -84,14 +84,14 @@ def run_tests(run_student, run_correct, options):
         try:
             student_accepts = run_student(string)
         except RuntimeError as e:
-            return "On input {}: {}".format(string, e)
+            return "On input {!r}: {}".format(string, e)
         except Exception as e:
             return "There's an error in the automata representation."
         correct_accepts = run_correct(string)
         if student_accepts and not correct_accepts:
-            return "Input {} should be rejected.".format(string)
+            return "Input {!r} should be rejected.".format(string)
         elif not student_accepts and correct_accepts:
-            return "Input {} should be accepted.".format(string)
+            return "Input {!r} should be accepted.".format(string)
     return "Good"
 
 
