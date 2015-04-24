@@ -14,8 +14,9 @@ run_pda.py: $(MODULES)
 	$(EGREP) --invert-match --no-filename $(IMPORTS_REGEX) $+ >> $@
 	chmod +x $@
 
-test: $(MODULES) test_pda.py
+test: $(MODULES) test_pda.py run_pda.py
 	$(PYTEST) --verbose --doctest-modules $+
+	./integration-tests.sh
 
 clean:
 	rm -f run_pda.py
