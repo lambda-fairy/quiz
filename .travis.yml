@@ -1,0 +1,10 @@
+language: python
+python:
+  - 3.3
+  - 3.4
+
+install:
+  - true
+
+script:
+  - ( cd pda && make test )
