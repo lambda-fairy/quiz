@@ -116,7 +116,8 @@ if __name__ == '__main__':
     try:
         run_student = parse_automaton(student_answer, build_options, exec_options)
     except Exception as e:
-        raise SystemExit(e)
+        print(e)
+        raise SystemExit
 
     if test_options['use_student_answer']:
         run_correct = run_student
