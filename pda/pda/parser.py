@@ -5,10 +5,8 @@ import re
 FINAL_STATES_RE = re.compile(r'\{(\d+(,\d+)*)?\}')
 PATTERN_RE = re.compile(r'\((?P<state>\d+),(?P<input>\w+),(?P<stack>\w+)\)')
 OUTPUT_RE = re.compile(r'\((?P<state>\d+),(?P<stack>\w+)\)')
-
-TOKEN_RE = re.compile(r'''
-    (?: (?P<final_states> \{.*?\} )
-      | (?P<pattern> \(.*?\) )
+TRANSITION_RE = re.compile(r'''
+    (?: (?P<pattern> \(.*?\) )
         ->
         (?: (?P<output> \(.*?\) )
           | \{ (?P<outputs> .*? ) \}
@@ -24,43 +22,53 @@ def parse_transition_table(s):
     otherwise raise ValueError.
     """
 
+    parser = Parser(s)
+
+    # Parse transition table (e.g. '(0, a, e) -> (1, A)')
     table = defaultdict(dict)
-    final_states = None
-    for token in parse_tokens(s):
-        if 'final_states' in token:
-            if final_states is not None:
-                raise ValueError('duplicate final state declarations')
-            else:
-                final_states = token.final_states
-        else:
-            p = token.pattern
-            if (p.input, p.stack) in table[p.state]:
-                raise ValueError('duplicate clauses for {}'.format(
-                    (p.state, p.input, p.stack)))
-            else:
-                table[p.state][(p.input, p.stack)] = \
-                        {(o.state, o.stack) for o in token.outputs}
-    return (dict(table), final_states or frozenset())
-
-
-def parse_tokens(s):
-    s = re.sub(r'\s+', '', s)
-    i = 0
-    while i < len(s):
-        m = TOKEN_RE.match(s, i)
+    while True:
+        m = parser.try_consume(TRANSITION_RE)
         if m is None:
-            raise ValueError('invalid syntax')
-        elif m.group('final_states'):
-            # Match final state declarations (e.g. '{0, 1}')
-            # ``eval()`` is safe here, as the regex ensures valid input
-            final_states = frozenset(eval(m.group('final_states')))
-            yield PropertyDict(final_states=final_states)
+            break
         else:
-            # Otherwise, it's a row of the transition table
             pattern = parse_pattern(m.group('pattern'))
             outputs = parse_outputs(m.group('output') or m.group('outputs'))
-            yield PropertyDict(pattern=pattern, outputs=outputs)
-        i = m.end()
+            if (pattern.input, pattern.stack) in table[pattern.state]:
+                raise ValueError('duplicate clauses for {}'.format(
+                    (pattern.state, pattern.input, pattern.stack)))
+            else:
+                table[pattern.state][(pattern.input, pattern.stack)] = \
+                        {(output.state, output.stack) for output in outputs}
+
+    # Match final state declarations (e.g. '{0, 1}')
+    final_states = None
+    m = parser.try_consume(FINAL_STATES_RE)
+    if m is None:
+        final_states = frozenset()
+    else:
+        # eval() is safe here, as the regex ensures valid input
+        final_states = frozenset(eval(m.group()))
+
+    parser.assert_end_of_input()
+    return (dict(table), final_states)
+
+
+class Parser:
+    def __init__(self, s):
+        self.s = re.sub(r'\s+', '', s)
+        self.i = 0
+
+    def try_consume(self, regex):
+        m = regex.match(self.s, self.i)
+        if m is None:
+            return None
+        else:
+            self.i = m.end()
+            return m
+
+    def assert_end_of_input(self):
+        if self.i != len(self.s):
+            raise ValueError('invalid syntax: {}'.format(self.s[self.i:]))
 
 
 def parse_pattern(s):

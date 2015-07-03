@@ -76,8 +76,8 @@ For example:
 
     {1, 2, 3}
 
-This line may be anywhere in the input, but it can only appear at most
-once. If omitted, the set is assumed to be empty.
+This line must be at the end of the PDA. If omitted, the set is assumed
+to be empty.
 
 Here's a PDA that matches the language `{ a^n b^n | n >= 0 }` by final
 state:
