@@ -1,0 +1,12 @@
+# This should raise an error, as the automaton accepts by final state
+# but the final state declaration is missing.
+accept_condition = FINAL_STATE
+---
+(0, a, e) -> (0, A)
+(0, a, A) -> (0, e)
+(0, b, e) -> (0, B)
+(0, b, B) -> (0, e)
+---
+(0, a, e) -> (0, A)
+(0, a, A) -> (0, e)
+(0, b, e) -> (0, B)

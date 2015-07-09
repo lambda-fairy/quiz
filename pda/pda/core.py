@@ -27,11 +27,16 @@ class PDA:
         if 0 not in table:
             raise ValueError('transition table must include at least the initial state')
 
+        if accept_condition & FINAL_STATE and final_states is None:
+            raise ValueError('missing final state declaration')
+
         # Check stack contains only valid symbols
         if not all(symbol in stack_alpha for symbol in initial_stack):
             raise ValueError('invalid initial stack')
 
-        unreachable = set(final_states.union(table.keys()))
+        unreachable = set(table.keys())
+        if final_states is not None:
+            unreachable.update(final_states)
         unreachable.discard(0)  # Initial state is always reachable
 
         # Check transition table

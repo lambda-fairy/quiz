@@ -25,5 +25,6 @@ test_example() {
 
 test_example palindrome 'Good'
 test_example incorrect "Input 'bb' should be accepted."
+test_example missing-final-states 'missing final state declaration'
 
 exit $status

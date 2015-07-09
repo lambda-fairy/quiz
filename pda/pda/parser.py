@@ -41,10 +41,9 @@ def parse_transition_table(s):
                         {(output.state, output.stack) for output in outputs}
 
     # Match final state declarations (e.g. '{0, 1}')
-    final_states = None
     m = parser.try_consume(FINAL_STATES_RE)
     if m is None:
-        final_states = frozenset()
+        final_states = None
     else:
         # eval() is safe here, as the regex ensures valid input
         final_states = frozenset(eval(m.group()))
