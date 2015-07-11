@@ -12,8 +12,8 @@ def parse_options(option_str):
             )
     exec_options = dict(
             max_iterations=1000,
-            max_configs=100,
-            max_stack_size=100,
+            max_configs=100000,
+            max_stack_size=1000,
             )
     test_options = dict(
             use_student_answer=False,
